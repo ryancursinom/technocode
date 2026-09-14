@@ -64,15 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Configurar botão de nova foto
         fabNovaFoto.setOnClickListener(v -> {
-
-            if (getSharedPreferences(LoginActivity.PREFS_NAME, MODE_PRIVATE)
-                    .getString(LoginActivity.KEY_USERNAME, "").isEmpty()) {
-
-                startActivity(new Intent(this, LoginActivity.class));
-                finish();
-                return;
-            }
-
+            verificarLogin();
             tirarFoto();
         });
 
@@ -167,6 +159,15 @@ public class MainActivity extends AppCompatActivity {
 
         fabNovaFoto.setEnabled(false);
         camera.launch(fotoUri);
+    }
+
+    // Verificar Login
+    private void verificarLogin() {
+        if (getSharedPreferences(LoginActivity.PREFS_NAME, MODE_PRIVATE)
+                .getString(LoginActivity.KEY_USERNAME, "").isEmpty()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+        }
     }
 
 

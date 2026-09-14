@@ -24,6 +24,8 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         EditText nome = findViewById(R.id.edtUsername);
 
+        ((Button) findViewById(R.id.btnVoltar)).setOnClickListener(v -> abrirTelaInicial());
+
         ((Button) findViewById(R.id.btnEntrar)).setOnClickListener(v -> {
             String valor = nome.getText().toString().trim();
 
