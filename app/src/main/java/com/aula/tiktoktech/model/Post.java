@@ -1,7 +1,6 @@
 package com.aula.tiktoktech.model;
 
 import com.google.firebase.firestore.DocumentId;
-import com.google.firebase.firestore.ServerTimestamp;
 
 public class Post {
 
@@ -13,7 +12,6 @@ public class Post {
     private long dislikes;
     private long comentarios;
 
-    @ServerTimestamp
     private long criadoEm;
 
 

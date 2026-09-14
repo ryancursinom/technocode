@@ -40,6 +40,7 @@
     <string name="msg_comentario_vazio">Escreva um comentário.</string>
     <string name="msg_post_invalido">Publicação não encontrada.</string>
     <string name="msg_erro_upload">Erro ao enviar a imagem: %1$s</string>
+    <string name="msg_url_imagem_invalida">O upload terminou, mas não recebemos a URL da imagem.</string>
     <string name="msg_erro_salvar">Erro ao salvar: %1$s</string>
     <string name="msg_erro_feed">Erro ao carregar o feed: %1$s</string>
     <string name="msg_erro_voto">Erro ao registrar o voto: %1$s</string>

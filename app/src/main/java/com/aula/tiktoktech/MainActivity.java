@@ -5,6 +5,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.EditText;
+import android.widget.Toast;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -14,15 +17,24 @@ import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.aula.tiktoktech.model.Post;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
     TextView txtVazio;
     FloatingActionButton fabNovaFoto;
     private Uri fotoUri;
+    private final List<Post> posts = new ArrayList<>();
+    private PostAdapter adapter;
+    private ListenerRegistration feedListener;
 
 
     // Configurar Câmera
@@ -61,6 +76,11 @@ public class MainActivity extends AppCompatActivity {
         // Inicializar componentes de tela
         txtVazio = findViewById(R.id.txtVazio);
         fabNovaFoto = findViewById(R.id.fabNovaFoto);
+        RecyclerView recyclerPosts = findViewById(R.id.recyclerPosts);
+        adapter = new PostAdapter(posts);
+        recyclerPosts.setLayoutManager(new LinearLayoutManager(this));
+        recyclerPosts.setAdapter(adapter);
+        observarFeed();
 
         // Configurar botão de nova foto
         fabNovaFoto.setOnClickListener(v -> {
@@ -80,6 +100,34 @@ public class MainActivity extends AppCompatActivity {
             Log.i("app_minhaselfie", "Erro ao configurar Cloudinary: " + e.getMessage());
         }
     }
+
+    private void observarFeed() {
+        feedListener = FirebaseFirestore.getInstance().collection("posts")
+                .orderBy("criadoEm", Query.Direction.DESCENDING)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        Toast.makeText(
+                                this,
+                                getString(R.string.msg_erro_feed, error.getMessage()),
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    posts.clear();
+                    if (snapshot != null) for (com.google.firebase.firestore.DocumentSnapshot doc : snapshot.getDocuments()) {
+                        Post post = doc.toObject(Post.class);
+                        if (post != null) {
+                            post.setId(doc.getId());
+                            posts.add(post);
+                        }
+                    }
+
+                    adapter.notifyDataSetChanged();
+                    txtVazio.setVisibility(posts.isEmpty() ? View.VISIBLE : View.GONE);
+                });
+    }
+
+    @Override protected void onDestroy() { if (feedListener != null) feedListener.remove(); super.onDestroy(); }
 
     @Override
     public boolean onCreateOptionsMenu(android.view.Menu menu) {
@@ -126,10 +174,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onSuccess(String requestId, Map resultData) {
 
-                        String urlImagem = (String) resultData.get("url");
-
-                        fabNovaFoto.setEnabled(true);
-                        txtVazio.setText(urlImagem);
+                        String urlImagem = (String) resultData.get("secure_url");
+                        pedirLegenda(urlImagem);
                     }
 
                     @Override
@@ -146,6 +192,42 @@ public class MainActivity extends AppCompatActivity {
                 }).dispatch();
     }
 
+    private void pedirLegenda(String urlImagem) {
+        EditText entrada = new EditText(this);
+        entrada.setHint(R.string.hint_legenda);
+        entrada.setSingleLine(false);
+
+        int margem = (int) (24 * getResources().getDisplayMetrics().density);
+        entrada.setPadding(margem, 8, margem, 8);
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.titulo_nova_publicacao)
+                .setView(entrada)
+                .setNegativeButton(R.string.acao_cancelar, (d, w) -> liberarCamera())
+                .setPositiveButton(R.string.acao_publicar, (d, w) -> {
+
+                    String legenda = entrada.getText().toString().trim();
+
+                    FirebaseFirestore.getInstance().collection("posts")
+                            .add(new Post(urlImagem, legenda))
+                            .addOnCompleteListener(task -> {
+                                if (!task.isSuccessful()) {
+                                    String erro = task.getException() != null
+                                            ? task.getException().getMessage()
+                                            : "Erro desconhecido";
+                                    Toast.makeText(
+                                            MainActivity.this,
+                                            MainActivity.this.getString(R.string.msg_erro_salvar, erro),
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                                liberarCamera();
+                            });
+                }).setOnCancelListener(d -> liberarCamera()).show();
+    }
+
+    private void liberarCamera() { fabNovaFoto.setEnabled(true); }
+
     // Metodo para tirar foto
     private void tirarFoto() {
         if (getSharedPreferences(LoginActivity.PREFS_NAME, MODE_PRIVATE)
@@ -154,8 +236,9 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
+
         File arquivo = new File(getExternalFilesDir(null), "foto_" + System.currentTimeMillis() + ".jpg");
-        fotoUri = FileProvider.getUriForFile(this, getPackageName() + ".fileProvider", arquivo);
+        fotoUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", arquivo);
 
         fabNovaFoto.setEnabled(false);
         camera.launch(fotoUri);
