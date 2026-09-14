@@ -8,6 +8,13 @@
     <!-- Feed -->
     <string name="feed_vazio">Nenhuma publicação ainda.\nToque na câmera para começar.</string>
     <string name="acao_nova_foto">Nova foto</string>
+    <string name="titulo_login">Entrar no TikTokTech</string>
+    <string name="hint_username">Nome de usuário</string>
+    <string name="acao_entrar">Entrar</string>
+    <string name="acao_trocar_usuario">Trocar usuário</string>
+    <string name="acao_logout">Sair</string>
+    <string name="erro_nome_obrigatorio">Informe seu nome de usuário</string>
+    <string name="bem_vindo">Bem-vindo, %1$s!</string>
     <string name="desc_foto_publicacao">Foto da publicação</string>
     <string name="acao_like">Curtir</string>
     <string name="acao_dislike">Não curtir</string>

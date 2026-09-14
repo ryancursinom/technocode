@@ -1,5 +1,6 @@
 package com.aula.tiktoktech;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -47,7 +48,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+
         setContentView(R.layout.activity_main);
+        setSupportActionBar(findViewById(R.id.toolbar));
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -60,6 +64,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Configurar botão de nova foto
         fabNovaFoto.setOnClickListener(v -> {
+
+            if (getSharedPreferences(LoginActivity.PREFS_NAME, MODE_PRIVATE)
+                    .getString(LoginActivity.KEY_USERNAME, "").isEmpty()) {
+
+                startActivity(new Intent(this, LoginActivity.class));
+                finish();
+                return;
+            }
+
             tirarFoto();
         });
 
@@ -74,6 +87,28 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.i("app_minhaselfie", "Erro ao configurar Cloudinary: " + e.getMessage());
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(android.view.Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
+        if (item.getItemId() == R.id.action_trocar_usuario) {
+            startActivity(new Intent(this, LoginActivity.class).putExtra("trocar_usuario", true));
+            finish();
+            return true;
+        }
+        if (item.getItemId() == R.id.action_logout) {
+            getSharedPreferences(LoginActivity.PREFS_NAME, MODE_PRIVATE).edit().clear().apply();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     // Metodo para salvar foto no Cloudinary
@@ -121,6 +156,12 @@ public class MainActivity extends AppCompatActivity {
 
     // Metodo para tirar foto
     private void tirarFoto() {
+        if (getSharedPreferences(LoginActivity.PREFS_NAME, MODE_PRIVATE)
+                .getString(LoginActivity.KEY_USERNAME, "").isEmpty()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
         File arquivo = new File(getExternalFilesDir(null), "foto_" + System.currentTimeMillis() + ".jpg");
         fotoUri = FileProvider.getUriForFile(this, getPackageName() + ".fileProvider", arquivo);
 

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"><item android:id="@+id/action_trocar_usuario" android:title="@string/acao_trocar_usuario" /><item android:id="@+id/action_logout" android:title="@string/acao_logout" /></menu>
